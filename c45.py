@@ -5,6 +5,7 @@ __author__= 'mkfsn'
 
 import sys
 from math import log
+from collections import Counter
 
 class Node():
     item = 2
@@ -43,11 +44,11 @@ class C45():
             return size-1 if res>size else res
         elif attr == 4:
             size = self.__attr_len(attr)
-            res = int(value)/40000
+            res = int(value)/20000
             return size-1 if res>size else res
     
     def __attr_len(self, attr):
-        length = [3, 11, 4, 11, 6]
+        length = [3, 11, 4, 11, 11]
         return length[attr]
 
     def __func_info(self, val_list):
@@ -67,9 +68,8 @@ class C45():
         if len(dataset) < 1:
             return Node(2, 0, 'Basic')
         if not sum(flag):
-            print dataset
-            print
-            return Node(2, 0 , 'Basic')
+            candidate = [e[2] for e in dataset]
+            return Node(2, 0 , Counter(candidate).most_common(1)[0][0])
 
         count = [[[0]*4 for j in range(self.__attr_len(i))] for i in range(5)]
         for entry in dataset:
@@ -98,6 +98,11 @@ class C45():
             self.level -= 1
         return node
 
+    def __traversal( self, tree, entry ):
+        if tree.item == 2:
+            return tree.value
+        subtree = tree.decision[self.__transfer(tree.item, entry[tree.item])]['child']
+        return  self.__traversal(subtree, entry)
 
     def learn(self, filename):
         with open(filename, 'r') as f:
@@ -105,7 +110,11 @@ class C45():
         self.__tree['child'] = self.__build(self.__database, [1, 1, 0, 1, 1])
 
     def test(self, filename):
-        pass
+        with open(filename, 'r') as f:
+            parsed = [self.__decode(l) for l in f]
+            result = [(e[2], self.__traversal(self.__tree['child'], e)) for e in parsed]
+            ratio = sum(1 if a[0]==a[1] else 0 for a in result)*100.0/len(result)
+            print "%f%%" %(ratio)
 
 def usage():
     print "Usage:"
