@@ -2,9 +2,7 @@
 #include <fstream>
 #include <string>
 
-using std::ifstream;
 using std::cout;
-using std::cerr;
 using std::endl;
 using std::string;
 
@@ -22,7 +20,7 @@ int main(int argc, char* argv[])
     c45.training();
     c45.testing();
 
-    cout << c45;
+    cout << c45 << '%' << endl;
 
     return 0;
 }
