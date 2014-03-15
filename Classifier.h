@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cmath>
+#include <memory>
 
 
 using std::istream;
@@ -24,6 +25,7 @@ using std::ifstream;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::unique_ptr;
 
 
 /**************************************************************
@@ -41,7 +43,7 @@ using std::endl;
 struct C45_node {
     int attribute;
     string value;
-    vector<C45_node*> decision;
+    vector<unique_ptr<C45_node>> decision;
     C45_node();
 };
 
@@ -67,7 +69,7 @@ class C45 {
     vector<Element> database;    
     string train_file, test_file;
     ifstream f_train, f_test;
-    C45_node* tree;
+    unique_ptr<C45_node> tree;
     map<string, double> weight;
     map<double, string> weight_r;
 
@@ -78,9 +80,9 @@ class C45 {
     Element parse_entry ( string str );
     int insert ( string str );
     vector<double> calculate_info ( vector<Element> dataset, bool* flag );
-    C45_node* make_node( vector<Element> dataset, bool* flag );
+    unique_ptr<C45_node> make_node( vector<Element> dataset, bool* flag );
     int attribute_size ( int item );
-    string traverse ( Element el, C45_node* tree );
+    string traverse ( Element el, unique_ptr<C45_node>& tree );
 
 public:
     C45(string _train, string _test);

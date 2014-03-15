@@ -167,10 +167,10 @@ vector<double> C45::calculate_info ( vector<Element> dataset, bool* flag )
 }
 
 
-C45_node* C45::make_node( vector<Element> dataset, bool* flag )
+unique_ptr<C45_node> C45::make_node( vector<Element> dataset, bool* flag )
 {
     if ( dataset.size() < 1 ) {
-        C45_node* node = new C45_node();
+        unique_ptr<C45_node> node (new C45_node());
         node->attribute = 2;
         map<double, string>::reverse_iterator m = weight_r.rbegin();
         node->value = m->second;
@@ -195,13 +195,13 @@ C45_node* C45::make_node( vector<Element> dataset, bool* flag )
         }
         map<double, string>::reverse_iterator m2 = candidate_r.rbegin();
 
-        C45_node* node = new C45_node();
+        unique_ptr<C45_node> node (new C45_node());
         node->attribute = 2;
         node->value = m2->second;
         return node;
     }
 
-    C45_node* node = new C45_node();
+    unique_ptr<C45_node> node (new C45_node());
 
     // Compute information-theoretic criteria
     vector<double> info = calculate_info ( dataset, flag ),
@@ -247,7 +247,7 @@ int C45::attribute_size ( int item )
 }
 
 
-string C45:: traverse ( Element el, C45_node* tree )
+string C45:: traverse ( Element el, unique_ptr<C45_node>& tree )
 {
     if ( tree->attribute == 2 )
         return tree->value;

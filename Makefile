@@ -1,5 +1,5 @@
 CC     = g++
-CFLAGS = -g -Wall --std=c++0x
+CFLAGS = -g -Wall --std=c++11
 EXT    = cpp
 TARGET = main
 DRIVER = Classifier
