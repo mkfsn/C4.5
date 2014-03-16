@@ -8,21 +8,21 @@ from math import log
 from collections import Counter
 
 class Node():
-    item = 2
+    item = -1
     value = ""
     decision = []
 
     def __init__(self, item = 2, num = 0, value = ""):
-        self.decision = [{}]*num
+        self.decision = [0]*num
         self.item     = item
         self.value    = value
 
-    def __str__(self):
-        return "(item: {0}, value: {1}, decision: {2})".format(self.item,
-                self.value, self.decision)
+    def __repr__(self):
+        return repr({'item': self.item, 'value': self.value, 'decision':
+                self.decision})
 
 class C45():
-    __tree = {}
+    __tree = [] 
     __database = []
     level = 0
 
@@ -31,7 +31,7 @@ class C45():
 
     def __transfer(self, attr, value):
         if attr == 0:
-            return ['S', 'M', 'O'].index(value)
+            return ['S', 'M', 'Unknown'].index(value)
         elif attr == 1:
             size = self.__attr_len(attr)
             res = int(value)
@@ -57,19 +57,20 @@ class C45():
 
     def __decode(self, string):
         #marital_status, num_children_at_home, member_card, age, year_income
-        element = [ 'O', '0', 'Basic', '0', '0' ]
+        element = [ 'Unknown', '0', 'Basic', '0', '0' ]
         for e in string.strip().strip('{}').split(','):
             k, v = e.split(' ')
             element[ int(k) ] = v
         return element
 
     def __build(self, dataset, flag):
-
         if len(dataset) < 1:
-            return Node(2, 0, 'Basic')
+            self.__tree.append ( Node(2, 0, 'Basic') )
+            return len(self.__tree)-1
         if not sum(flag):
             candidate = [e[2] for e in dataset]
-            return Node(2, 0 , Counter(candidate).most_common(1)[0][0])
+            self.__tree.append( Node(2, 0 , Counter(candidate).most_common(1)[0][0]) )
+            return len(self.__tree)-1
 
         count = [[[0]*4 for j in range(self.__attr_len(i))] for i in range(5)]
         for entry in dataset:
@@ -89,38 +90,42 @@ class C45():
 
         gain = [ info[2]-v if flag[k] else -10.0 for k,v in enumerate(info) ]
         idx = gain.index(max(gain))
+
         node = Node(idx, self.__attr_len(idx), "")
+        self.__tree.append( node )
+        cur_idx = len(self.__tree)-1
+
         new_flag = [ 0 if idx==k else v for k,v in enumerate(flag) ]
         for k, n in enumerate(node.decision):
             new_dataset = [e for e in dataset if self.__transfer(idx, e[idx])==k]
-            self.level += 1
-            n['child'] = self.__build( new_dataset, new_flag )
-            self.level -= 1
-        return node
+            node.decision[k] = self.__build( new_dataset, new_flag )
+        return cur_idx
 
-    def __traversal( self, tree, entry ):
-        if tree.item == 2:
-            return tree.value
-        subtree = tree.decision[self.__transfer(tree.item, entry[tree.item])]['child']
+
+    def __traversal( self, idx, entry ):
+        item = self.__tree[idx].item
+        value = self.__tree[idx].value
+        if item == 2:
+            return value
+        subtree = self.__tree[idx].decision[self.__transfer(item, entry[item])]
         return  self.__traversal(subtree, entry)
 
     def learn(self, filename):
         with open(filename, 'r') as f:
             self.__database = [ self.__decode(l) for l in f ]
-        self.__tree['child'] = self.__build(self.__database, [1, 1, 0, 1, 1])
+        self.__build(self.__database, [1, 1, 0, 1, 1])
 
     def test(self, filename):
         with open(filename, 'r') as f:
             parsed = [self.__decode(l) for l in f]
-            result = [(e[2], self.__traversal(self.__tree['child'], e)) for e in parsed]
-            ratio = sum(1 if a[0]==a[1] else 0 for a in result)*100.0/len(result)
-            print "%f%%" %(ratio)
+        result = [(e[2], self.__traversal(0, e)) for e in parsed]
+        ratio = sum(1 if a[0]==a[1] else 0 for a in result)*100.0/len(result)
+        return "{0}%".format(ratio)
 
 def usage():
     print "Usage:"
     print "\t ./c45.py trainingfile testfile"
     print
-
 
 def main():
     if len(sys.argv) < 3:
@@ -132,8 +137,7 @@ def main():
     
     c = C45()
     c.learn( train_file )
-    c.test( test_file )
-
+    print c.test( test_file )
 
 if __name__ == '__main__':
     main()
