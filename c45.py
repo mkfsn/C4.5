@@ -24,7 +24,6 @@ class Node():
 class C45():
     __tree = [] 
     __database = []
-    level = 0
 
     def __init__(self):
         pass
